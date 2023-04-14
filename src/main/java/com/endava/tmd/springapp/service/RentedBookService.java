@@ -37,6 +37,9 @@ public class RentedBookService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AvailableBookService availableBookService;
+
 
     public RentedBookService(RentedBookRepository rentedBookRepository){
         this.rentedBookRepository = rentedBookRepository;
@@ -54,10 +57,12 @@ public class RentedBookService {
         rentedBookRepository.deleteById(id);
     }
 
-    public void addManualRentedBook(Long available_book_id, Long userId, LocalDateTime rentedUntil, String rentedPeriod){
+    public void addManualRentedBook(Long available_book_id, Long userId, String rentedPeriod){
         RentedBook rentedBook = new RentedBook();
 
         User newUser = new User();
+
+        User owner = availableBookService.getById(available_book_id).getOwner();
 
         User currentUser = userRepository.findById(userId).get();
 
@@ -67,7 +72,6 @@ public class RentedBookService {
 
         rentedBook.setBook(availableBookRepository.findById(available_book_id).get());
         rentedBook.setUser(userRepository.findById(userId).get());
-        rentedBook.setRentedUntil(rentedUntil);
         rentedBook.setRentedPeriod(rentedPeriod);
         rentedBook.setExtendedPeriod(false);
 
@@ -78,22 +82,31 @@ public class RentedBookService {
         newUser.setRentedBookList(currentUser.getRentedBookList());
         newUser.setAvailableBooksOwner(currentUser.getAvailableBooksOwner());
         newUser.setBooksOnWaitingList(currentUser.getBooksOnWaitingList());
-        newUser.setPoints(currentUser.getPoints() + 10);
 
-//        switch (rentedPeriod) {
-//            case "1 week" ->
-//                //userRepository.findById(userId).get().setPoints(userRepository.findById(userId).get().getPoints() + 10);
-//                    newUser.setPoints(currentUser.getPoints() + 10);
-//            case "2 weeks" ->
-//                //userRepository.findById(userId).get().setPoints(userRepository.findById(userId).get().getPoints() + 20);
-//                    newUser.setPoints(currentUser.getPoints() + 20);
-//            case "3 weeks" ->
-//                //userRepository.findById(userId).get().setPoints(userRepository.findById(userId).get().getPoints() + 30);
-//                    newUser.setPoints(currentUser.getPoints() + 30);
-//            case "1 month" ->
-//                //userRepository.findById(userId).get().setPoints(userRepository.findById(userId).get().getPoints() + 40);
-//                    newUser.setPoints(currentUser.getPoints() + 40);
-//        }
+        switch (rentedPeriod) {
+            case "1 week" -> {
+                rentedBook.setRentedUntil(LocalDateTime.now().plusDays(7));
+                newUser.setPoints(currentUser.getPoints() + 5);
+                owner.setPoints(owner.getPoints() + 10);
+            }
+            case "2 weeks" -> {
+                rentedBook.setRentedUntil(LocalDateTime.now().plusDays(14));
+                newUser.setPoints(currentUser.getPoints() + 5);
+                owner.setPoints(owner.getPoints() + 20);
+            }
+
+            case "3 weeks" -> {
+                rentedBook.setRentedUntil(LocalDateTime.now().plusDays(21));
+                newUser.setPoints(currentUser.getPoints() + 5);
+                owner.setPoints(owner.getPoints() + 30);
+            }
+            case "1 month" -> {
+                rentedBook.setRentedUntil(LocalDateTime.now().plusMonths(1));
+                newUser.setPoints(currentUser.getPoints() + 5);
+                owner.setPoints(owner.getPoints() + 40);
+            }
+        }
+
 
         userService.updateUser(userId, newUser);
         rentedBookRepository.saveAndFlush(rentedBook);

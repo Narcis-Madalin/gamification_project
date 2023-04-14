@@ -39,7 +39,7 @@ public class RentedBookController {
     public void addManualRentedBook(@RequestParam (name = "available_book_id") Long availableBookId, @RequestParam (name = "id") Long userId, @RequestParam (name = "period") String rentedPeriod){
 
 
-        rentedBookService.addManualRentedBook(availableBookId, userId, LocalDateTime.now().plusDays(21), rentedPeriod);
+        rentedBookService.addManualRentedBook(availableBookId, userId, rentedPeriod);
     }
 
     @RequestMapping(method = RequestMethod.DELETE)
